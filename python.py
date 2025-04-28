@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from matplotlib.animation import FuncAnimation
 
+#CONSTANTS
 #Declare the constant variables, these shouldn't be changed
 C = 0.48 #Drag coefficient
 P = 1.293 #Air pressure
-
 PI = np.pi #Pi = 3.141...
 G = 9.81 #Gravitational accelaration
 M = 1 #Weight of the pendulum bob
@@ -15,16 +15,19 @@ L = 10 #Length of the pendulum
 R = 0.05 #Radius of the bob
 A = R**2 * PI #Area of the bob facing air resistance (Transverse direction)
 
+#VARIABLES - These should be changed
 #Declare the initial values for angle and velocity which can be changed
 theta0 = -1
 v0 = 2
-initial_values = (theta0, v0)
+initial_values = (theta0, v0) #Stores the initial values
 
 #Setup the time variable, in this case the animation/simulation will run for 30 seconds
 t = np.linspace(0, 30, 900)
 t_span = (0, 30)
 
+#ANIMATING THE SWINGING PENDULUM
 #Setup the equation for the pendulum's motion, this will be in terms of angle and angular velocity
+#The differential equation is impossible to solve analytically, therefore I am solving it numerically using python
 def movement(t, variables):
     theta, omega = variables
     dtheta_dt = omega
@@ -32,7 +35,7 @@ def movement(t, variables):
 
     return (dtheta_dt, domega_dt)
 
-#Solve the equation and store in an array
+#Solve the equation numerically and store in an array
 solution = solve_ivp(movement, t_span, initial_values, t_eval = t)
 
 #Create arrays storing x and y coordinates for the swinging pendulum
@@ -70,12 +73,13 @@ def update(frame):
 
     return line, bob, arrow
 
-#Create the animation and show
+#Create the swinging pendulum animation and show
 pendulum_Animation = FuncAnimation(fig, update, frames=len(t), interval = 30, blit = False)
 plt.title('Swinging Pendulum')
 plt.show()
 
-#Creating the vector field
+#SIMULATING THE VECTOR FIELD
+#Declare variables to be used in creating the vector field
 c = 64
 theta_lim = 2*PI * 4
 omega_lim = c / L
@@ -83,6 +87,7 @@ vector_field = [0] * c
 initial_theta = -theta_lim
 initial_omega = omega_lim
 
+#Creating the vector field by solving trajectories with different starting conditions
 for k in range(0, c):
     if (k == c // 2):
         initial_theta = -initial_theta
@@ -94,11 +99,13 @@ for k in range(0, c):
     instance = solve_ivp(movement, t_span, initial_values, t_eval = t)
     vector_field[k] = instance
 
+#Setup the plot
 figfield, axfield = plt.subplots()
 axfield.set_xlim(-theta_lim-1, theta_lim+1)
 axfield.set_ylim(-omega_lim-1, omega_lim+1)
 pendulum_field, = axfield.plot([],[], 'b-', color = 'blue', lw = 1)
 
+#Plot the different vectors
 for vector in vector_field:
     for k in range(len(vector.y[0])):
         if k > 0 and k % 25 == 0:
@@ -108,7 +115,7 @@ for vector in vector_field:
 x_field = solution.y[0]
 y_field = solution.y[1]
 
-#Create the function to update frames for pendulum moving through the field
+#Create the function to update frames for the pendulum from the first part moving through the field
 def update_pendulum(frame):
     pendulum_field.set_data(x_field[:frame], y_field[:frame])
 
